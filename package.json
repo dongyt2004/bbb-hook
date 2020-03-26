@@ -1,0 +1,17 @@
+{
+  "name": "bbb-hook",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "4.17.1",
+    "request": "2.88.0",
+    "sha1": "1.1.0",
+    "body-parser": "1.19.0",
+    "adaro": "1.0.4",
+    "md5": "2.2.1",
+    "xml2js": "0.4.22",
+    "lodash": "4.17.15",
+    "each-async": "1.1.1",
+    "hash.js": "1.1.7",
+    "pinyin": "2.9.0"
+  }
+}
