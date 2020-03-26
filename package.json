@@ -1,6 +1,34 @@
 {
   "name": "bbb-hook",
   "version": "1.0.0",
+  "description": "bbb钩子系统",
+  "main": "client.js",
+  "scripts": {
+    "start": "node client.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dongyt/bbb-hook.git"
+  },
+  "keywords": [
+    "bbb",
+    "会议纪要系统",
+    "思维导图",
+    "脑图",
+    "AI",
+    "NLP（自然语言处理）",
+    "生成式摘要",
+    "summarization"
+  ],
+  "author": "董玉涛",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dongyt/bbb-hook/issues"
+  },
+  "homepage": "https://github.com/dongyt/bbb-hook#readme",
+  "devDependencies": {
+    "parcel-bundler": "1.12.4"
+  },
   "dependencies": {
     "express": "4.17.1",
     "request": "2.88.0",

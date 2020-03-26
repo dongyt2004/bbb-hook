@@ -45,7 +45,7 @@ https.get({
 );
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 创建bbb回调钩子
-const CALLBACK_URL = "http://localhost:1080/notify";
+const CALLBACK_URL = "http://meeting-summary-mindmap.ruoben.com:16172/notify";
 const SHARED_SECRET = "Hgdhxsy3OBhGwS4BKn5Bq8Ow0GHvwkZ32VthJ9RnXs";
 app.get("/create", function (req, res) {
     var reqURL = "https://www.eadiu.com/bigbluebutton/api/hooks/create?callbackURL=" + CALLBACK_URL;
@@ -744,7 +744,7 @@ app.post("/test-text", function (req1, response) {
             */
             text = text.replace(/\n(\n)*( )*(\n)*\n/g, '\n');  // 去除空行
             request.post({
-                url: "http://106.38.121.167:8008/summary",
+                url: "http://summary-svc.default:8080/summary",
                 json: true,
                 body: {speaker: 'test', text: text}
             }, function (err, res, body) {
@@ -782,7 +782,7 @@ app.post("/test-text", function (req1, response) {
                                 取原文中的ner
                                 */
                                 request.post({
-                                    url: "http://106.38.121.167:8888",
+                                    url: "http://dd-ner-4in1-svc.default",
                                     body: '' + req1.body
                                 }, function (err, res, body) {
                                     if (err) {
@@ -819,7 +819,7 @@ app.post("/test-text", function (req1, response) {
                                             取摘要中的ner
                                             */
                                             request.post({
-                                                url: "http://106.38.121.167:8888",
+                                                url: "http://dd-ner-4in1-svc.default",
                                                 body: summary
                                             }, function (err, res, body) {
                                                 if (err) {
@@ -906,7 +906,7 @@ app.post("/test-text", function (req1, response) {
                                                                 取关系
                                                                 */
                                                                 request.post({
-                                                                    url: "http://106.38.121.167:1935/ltp",
+                                                                    url: "http://ltp-svc.default:12345/ltp",
                                                                     form: {
                                                                         s: '' + req1.body
                                                                     }
