@@ -45,7 +45,7 @@ https.get({
 );
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 创建bbb回调钩子
-const CALLBACK_URL = "http://meeting-summary-mindmap.ruoben.com:16172/notify";
+const CALLBACK_URL = "http://meeting.ruoben.com:16172/notify";
 const SHARED_SECRET = "Hgdhxsy3OBhGwS4BKn5Bq8Ow0GHvwkZ32VthJ9RnXs";
 app.get("/create", function (req, res) {
     var reqURL = "https://www.eadiu.com/bigbluebutton/api/hooks/create?callbackURL=" + CALLBACK_URL;
