@@ -44,6 +44,11 @@ https.get({
     }
 );
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
+// 如果没有/var/bigbluebutton/published/presentation/test目录，则创建之
+if (!fs.existsSync("/var/bigbluebutton/published/presentation/test")) {
+    fs.mkdirSync("/var/bigbluebutton/published/presentation/test");
+}
+/** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 创建bbb回调钩子
 const CALLBACK_URL = "http://meeting.ruoben.com:16172/notify";
 const SHARED_SECRET = "Hgdhxsy3OBhGwS4BKn5Bq8Ow0GHvwkZ32VthJ9RnXs";
