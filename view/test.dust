@@ -59,8 +59,6 @@
                 }
                 $("#loadingModal").modal('show');
                 $('#sum_container')[0].innerHTML = "";
-                document.getElementById('myframe').contentWindow.location.reload(true);
-                $('#myframe').attr('src', '');
                 $.ajax({
                     url: "/test-text",
                     type: "POST",
