@@ -1160,7 +1160,7 @@ app.get("/getmind/:recordId/:speakerId", function (req, res) {
                 } else {
                     var mind = JSON.parse(mnd.toString().replace(/%/g, '%25'));
                     mind['record'] = req.params.recordId;
-                    res.status(200).json({'param': JSON.stringify(mind)});
+                    res.status(200).json(mind);
                 }
             });
         } else {
