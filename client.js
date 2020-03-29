@@ -246,16 +246,11 @@ app.get("/resource/:recordId", function (req, res) {
                 if (files.length === 0) {
                     res.header('Content-Type', 'text/plain; charset=utf-8').status(404).end("脑图文件不存在");
                 } else {
-                    var minds = [];
+                    var speakers = [];
                     for (var i=0; i<files.length; i++) {
-                        var mind = JSON.parse(('' + fs.readFileSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/" + files[i])).replace(/%/g, '%25'));
-                        // var mind = JSON.parse(('' + fs.readFileSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\" + files[i])).replace(/%/g, '%25'));
-                        mind['record'] = req.params.recordId;
-                        var sum_obj = mind['sum_obj'];
-                        delete mind['sum_obj'];
-                        minds.push({mind: JSON.stringify(mind), speaker: mind.speaker, sum_obj: JSON.stringify(sum_obj).replace(/%25/g, '%')});
+                        speakers.push({record: req.params.recordId, speaker: files[i].split('.')[1]});
                     }
-                    res.render('mind', {minds: minds});
+                    res.render('mind', {speakers: speakers});
                 }
             } else {
                 console.log("没有提供正确的类型，类型必须是mp3,wav,txt,sum,mnd");
@@ -1126,13 +1121,53 @@ app.get("/test-resource", function (req, res) {
                         mind['record'] = 'test';
                         var sum_obj = mind['sum_obj'];
                         delete mind['sum_obj'];
-                        res.status(200).json({'sum': summary.toString(), 'sum_obj': JSON.stringify(sum_obj).replace(/%25/g, '%'), 'param': JSON.stringify(mind)});
+                        res.status(200).json({'sum': summary.toString(), 'sum_obj': JSON.stringify(sum_obj).replace(/%25/g, '%')});
                     }
                 });
             }
         });
     } else {
         res.header('Content-Type', 'text/plain; charset=utf-8').status(404).end("文件不存在");
+    }
+});
+// 取speaker的思维导图
+app.get("/getmind/:recordId/:speakerId", function (req, res) {
+    if (req.params.recordId === 'test') {
+        var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
+        // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+        if (exist) {
+            fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
+                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+                if (err) {
+                    console.error(err);
+                    res.status(500).end(err.toString());
+                } else {
+                    var mind = JSON.parse(mnd.toString().replace(/%/g, '%25'));
+                    mind['record'] = 'test';
+                    res.status(200).json({'param': JSON.stringify(mind)});
+                }
+            });
+        } else {
+            res.header('Content-Type', 'text/plain; charset=utf-8').status(404).end("文件不存在");
+        }
+    } else {
+        var exist = fs.existsSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams." + req.params.speakerId + ".mnd");
+        // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+        if (exist) {
+            fs.readFile("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams." + req.params.speakerId + ".mnd", function (err, mnd) {
+                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+                if (err) {
+                    console.error(err);
+                    res.status(500).end(err.toString());
+                } else {
+                    var mind = JSON.parse(mnd.toString().replace(/%/g, '%25'));
+                    mind['record'] = req.params.recordId;
+                    res.status(200).json({'param': JSON.stringify(mind)});
+                }
+            });
+        } else {
+            res.header('Content-Type', 'text/plain; charset=utf-8').status(404).end("文件不存在");
+        }
     }
 });
 
