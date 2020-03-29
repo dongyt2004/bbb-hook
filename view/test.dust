@@ -59,7 +59,7 @@
                 }
                 $('#sum_container')[0].innerHTML = "";
                 document.getElementById('myframe').contentWindow.location.reload(true);
-                $('#myframe').attr('src', '/mindmap.html?mind={record: null}');
+                $('#myframe').attr('src', '/mindmap.html?mind={"record": null}');
                 $("#loadingModal").modal('show');
                 $.ajax({
                     url: "/test-text",
@@ -72,7 +72,7 @@
                                $('#sum_container')[0].innerHTML = data.sum;
                                $('#sum_obj').val(data.sum_obj);
                                document.getElementById('myframe').contentWindow.location.reload(true);
-                               $('#myframe').attr('src', '/mindmap.html?mind={record: "test"}');
+                               $('#myframe').attr('src', '/mindmap.html?mind={"record": "test"}');
                                $('#loadingModal').modal('hide');
                             });
                        } else {
