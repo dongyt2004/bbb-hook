@@ -1118,9 +1118,7 @@ app.get("/test-resource", function (req, res) {
                         res.status(500).end(err.toString());
                     } else {
                         var mind = JSON.parse(mnd.toString().replace(/%/g, '%25'));
-                        mind['record'] = 'test';
                         var sum_obj = mind['sum_obj'];
-                        delete mind['sum_obj'];
                         res.status(200).json({'sum': summary.toString(), 'sum_obj': JSON.stringify(sum_obj).replace(/%25/g, '%')});
                     }
                 });
@@ -1144,7 +1142,7 @@ app.get("/getmind/:recordId/:speakerId", function (req, res) {
                 } else {
                     var mind = JSON.parse(mnd.toString().replace(/%/g, '%25'));
                     mind['record'] = 'test';
-                    res.status(200).json({'param': JSON.stringify(mind)});
+                    res.status(200).json(mind);
                 }
             });
         } else {

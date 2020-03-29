@@ -67,12 +67,12 @@
                     contentType: "text/plain",
                     data: $("#input1").val(),
                     success: function(data) {
-                       if (data == 'success') {
+                       if (data === 'success') {
                             $.get("/test-resource", function(data, status) {
                                $('#sum_container')[0].innerHTML = data.sum;
                                $('#sum_obj').val(data.sum_obj);
                                document.getElementById('myframe').contentWindow.location.reload(true);
-                               $('#myframe').attr('src', '/mindmap.html?mind={"record": "test"}');
+                               $('#myframe').attr('src', '/mindmap.html?mind={"record": "test", "speaker": "测试用户"}');
                                $('#loadingModal').modal('hide');
                             });
                        } else {
