@@ -371,7 +371,7 @@ app.post("/text/:recordId", function (req1, response) {
         */
         text = text.replace(/\n(\n)*( )*(\n)*\n/g, '\n');  // 去除空行
         request.post({
-            url: "http://106.38.121.167:8008/summary",
+            url: "http://summary-svc.default:8080/summary",
             json: true,
             body: {speaker: speaker, text: text}
         }, function (err, res, body) {
@@ -409,7 +409,7 @@ app.post("/text/:recordId", function (req1, response) {
                             取原文中的ner
                             */
                             request.post({
-                                url: "http://106.38.121.167:8888",
+                                url: "http://dd-ner-4in1-svc.default",
                                 body: initText
                             }, function (err, res, body) {
                                 if (err) {
@@ -446,7 +446,7 @@ app.post("/text/:recordId", function (req1, response) {
                                         取摘要中的ner
                                         */
                                         request.post({
-                                            url: "http://106.38.121.167:8888",
+                                            url: "http://dd-ner-4in1-svc.default",
                                             body: summary
                                         }, function (err, res, body) {
                                             if (err) {
@@ -533,7 +533,7 @@ app.post("/text/:recordId", function (req1, response) {
                                                             取关系
                                                             */
                                                             request.post({
-                                                                url: "http://106.38.121.167:1935/ltp",
+                                                                url: "http://ltp-svc.default:12345/ltp",
                                                                 form: {
                                                                     s: initText
                                                                 }
