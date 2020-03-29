@@ -248,7 +248,9 @@ app.get("/resource/:recordId", function (req, res) {
                 } else {
                     var speakers = [];
                     for (var i=0; i<files.length; i++) {
-                        speakers.push({record: req.params.recordId, speaker: files[i].split('.')[1]});
+                        var mind = JSON.parse(('' + fs.readFileSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/" + files[i])).replace(/%/g, '%25'));
+                        // var mind = JSON.parse(('' + fs.readFileSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\" + files[i])).replace(/%/g, '%25'));
+                        speakers.push({record: req.params.recordId, speaker: mind.speaker, sum_obj: JSON.stringify(mind['sum_obj']).replace(/%25/g, '%')});
                     }
                     res.render('mind', {speakers: speakers});
                 }
