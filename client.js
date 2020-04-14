@@ -755,7 +755,7 @@ app.post("/test-text", function (req1, response) {
                 } else {
                     if (res.statusCode === 200) {
                         var sum_obj = {};
-						var lines = summary.split('\n');
+                        var lines = summary.split('\n');
                         for(var i=0; i<lines.length; i++) {
                             sum_obj['' + i] = lines[i];
                         }
