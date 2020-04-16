@@ -747,7 +747,8 @@ app.post("/test-text", function (req1, response) {
             request.post({
                 url: "http://summary-svc.default:8080/summary",
                 json: true,
-                body: {text: text}
+                body: {text: text},
+                timeout: 120000
             }, function (err, res, summary) {
                 if (err) {
                     console.error(err);
@@ -792,7 +793,8 @@ app.post("/test-text", function (req1, response) {
                                             url: "http://ltp-svc.default:12345/ltp",
                                             form: {
                                                 s: '' + req1.body
-                                            }
+                                            },
+                                            timeout: 120000
                                         }, function (err, res, body) {
                                             if (err) {
                                                 console.error(err);
@@ -876,15 +878,6 @@ app.post("/test-text", function (req1, response) {
                                                                                     }
                                                                                 }
                                                                             }
-                                                                            /*if (word_idx > 0) {
-                                                                                for(var ii = word_idx - 1; ii >= 0; ii--) {
-                                                                                    if (words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') {
-                                                                                        ADV.unshift(words[ii].cont);
-                                                                                    } else {
-                                                                                        break;
-                                                                                    }
-                                                                                }
-                                                                            }*/
                                                                             for(var iii = word_idx + 1; iii <= words.length; iii++) {
                                                                                 if (words[iii].relate === 'CMP' || words[iii].relate === 'RAD') {
                                                                                     CMP.push(words[iii].cont);
