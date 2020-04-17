@@ -754,6 +754,8 @@ app.post("/test-text", function (req1, response) {
                     console.error(err);
                     response.status(500).end(err.toString());
                 } else {
+                    console.log(res.statusCode);  /////////////////
+                    console.log(summary);  /////////////////
                     if (res.statusCode === 200) {
                         var sum_obj = {};
                         var lines = summary.split('\n');
