@@ -754,8 +754,6 @@ app.post("/test-text", function (req1, response) {
                     console.error(err);
                     response.status(500).end(err.toString());
                 } else {
-                    console.log(res.statusCode);  /////////////////
-                    console.log(summary);  /////////////////
                     if (res.statusCode === 200) {
                         var sum_obj = {};
                         var lines = summary.split('\n');
@@ -904,7 +902,7 @@ app.post("/test-text", function (req1, response) {
                                                                     }
                                                                 }
                                                             }
-                                                            var retain = [];
+                                                            /*var retain = [];
                                                             for(var b = 0; b < spo.length; b++) {
                                                                 var contain = false;
                                                                 if (spo[b][3].length > 1) {
@@ -918,9 +916,9 @@ app.post("/test-text", function (req1, response) {
                                                                 if (contain) {
                                                                     retain.push(spo[b]);
                                                                 }
-                                                            }
+                                                            }*/
                                                             console.log("spo=" + JSON.stringify(retain));  //////////////////
-                                                            fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': retain}), function (err3) {
+                                                            fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': spo/*retain*/}), function (err3) {
                                                             // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': retain}), function (err3) {
                                                                 if (err3) {
                                                                     console.error('写mnd文件报错');
