@@ -917,9 +917,9 @@ app.post("/test-text", function (req1, response) {
                                                                     retain.push(spo[b]);
                                                                 }
                                                             }*/
-                                                            console.log("spo=" + JSON.stringify(retain));  //////////////////
+                                                            console.log("spo=" + JSON.stringify(spo));  //////////////////
                                                             fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': spo/*retain*/}), function (err3) {
-                                                            // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': retain}), function (err3) {
+                                                            // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': spo/*retain*/}), function (err3) {
                                                                 if (err3) {
                                                                     console.error('写mnd文件报错');
                                                                     response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写mnd文件报错");
