@@ -790,8 +790,8 @@ app.post("/test-text", function (req1, response) {
                                         取原文中的ner
                                         */
                                         request.post({
-                                            url: "http://106.38.121.167:8888",
-                                            body: initText
+                                            url: "http://dd-ner-4in1-svc.default",
+                                            body: text
                                         }, function (err, res, body) {
                                             if (err) {
                                                 console.error(err);
