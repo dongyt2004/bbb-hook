@@ -12,6 +12,7 @@ const _ = require('lodash');
 const eachAsync = require('each-async');
 const pinyin = require("pinyin");
 var exec = require('child_process').exec;
+const async = require('async');
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 var app = express();
 app.engine('dust', adaro.dust({
@@ -45,8 +46,11 @@ https.get({
 );
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 如果没有/var/bigbluebutton/published/presentation/test目录，则创建之
-if (!fs.existsSync("/var/bigbluebutton/published/presentation/test")) {
+/*if (!fs.existsSync("/var/bigbluebutton/published/presentation/test")) {
     fs.mkdirSync("/var/bigbluebutton/published/presentation/test");
+}*/
+if (!fs.existsSync("C:\\Users\\dongyt\\Desktop\\test")) {
+    fs.mkdirSync("C:\\Users\\dongyt\\Desktop\\test");
 }
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 创建bbb回调钩子
@@ -730,286 +734,298 @@ app.post("/text/:recordId", function (req1, response) {
 app.get("/", function (req, res) {
     res.status(200).render('test');
 });
+var text = '';
+// 取摘要任务
+var summary_task = function(callback) {
+    request.post({
+        url: "http://summary.ruoben.com:8008/summary",  //"http://summary-svc.default:8080/summary",
+        json: true,
+        body: {text: text},
+        timeout: 300000
+    }, function (err, res, summary) {
+        if (err) {
+            callback(err.toString());
+        } else {
+            if (res.statusCode === 200) {
+                console.log('summary=' + summary);  /////////////////
+                var sum_obj = {};
+                var lines = summary.split('\n');
+                for(var i=0; i<lines.length; i++) {
+                    sum_obj['' + i] = lines[i];
+                }
+                // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.sum", summary, function (err2) {
+                fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", summary, function (err2) {
+                    if (err2) {
+                        callback("写sum文件报错");
+                    } else {
+                        callback(null, sum_obj);
+                    }
+                });
+            } else {
+               callback("调用summary接口报错");
+            }
+        }
+    });
+};
+// 取标题任务
+var title_task = function(callback) {
+    var options = {
+        hostname: 'aip.baidubce.com',
+        path: '/rpc/2.0/nlp/v1/news_summary?charset=UTF-8&access_token=' + access_token,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    const req = https.request(options, function (res) {
+        var body = [];
+        res.on('data', function(chunk) {
+            body.push(chunk);
+        }).on('end', function() {
+            var data = JSON.parse(Buffer.concat(body).toString());
+            var title = data['summary'];  // 标题
+            console.log('title=' + title);  /////////////////
+            callback(null, title);
+        });
+    });
+    req.on('error', function(err) {
+        callback(err.toString());
+    });
+    var len = Math.round(text.length * 0.15);
+    if (len < 50) {
+        len = 50;
+    } else if (len > 100) {
+        len = 100;
+    }
+    var param = JSON.stringify({
+        'content': text,
+        'max_summary_len': len
+    });
+    req.write(param);
+    req.end();
+};
+// 取原文中的ner任务
+var ner_task = function(callback) {
+    request.post({
+        url: "http://dd-ner-4in1.ruoben.com:8008",  //"http://dd-ner-4in1-svc.default",
+        body: text
+    }, function (err, res, body) {
+        if (err) {
+            callback(err.toString());
+        } else {
+            if (res.statusCode === 200) {
+                var json = JSON.parse(body);
+                var ner = [];
+                for(var i = 0; i < json['sentences'].length; i++) {
+                    for(var j = 0; j < json['sentences'][i]['tokens'].length; j++) {
+                        var n = json['sentences'][i]['tokens'][j].ner;
+                        if (n === 'PERSON' || n === 'FOREIGN' || n === 'ORG' || n === 'FOREIGN_ORG' || n === 'PLACE' || n === 'FOREIGN_PLACE') {
+                            ner.push(json['sentences'][i]['tokens'][j].word);
+                        }
+                    }
+                }
+                ner = _.uniq(ner);
+                ner = _.filter(ner, function(word) {
+                    return word.length > 1;
+                });
+                console.log('ner=' + JSON.stringify(ner));  ///////////////////
+                callback(null, ner);
+            } else {
+                callback("调用ner接口报错");
+            }
+        }
+    });
+};
 // 接收语音识别得到的文本并生成摘要和脑图
 app.post("/test-text", function (req1, response) {
-    console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-    var text = '' + req1.body;  // 原文
-    console.log('text=' + text);  //////////////////////
-    fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
-    // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
-        if (error) {
-            console.error('写txt文件报错');
-            response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
-        } else {
-            /*
-            取摘要
-            */
-            request.post({
-                url: "http://summary-svc.default:8080/summary",
-                json: true,
-                body: {text: text},
-                timeout: 120000
-            }, function (err, res, summary) {
-                if (err) {
-                    console.error(err);
-                    response.status(500).end(err.toString());
-                } else {
-                    if (res.statusCode === 200) {
-                        var sum_obj = {};
-                        var lines = summary.split('\n');
-                        for(var i=0; i<lines.length; i++) {
-                            sum_obj['' + i] = lines[i];
-                        }
-                        console.log('summary=' + summary);  /////////////////
-                        fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.sum", summary, function (err2) {
-                        // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", summary, function (err2) {
-                            if (err2) {
-                                console.error('写sum文件报错');
-                                response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写sum文件报错");
+    text = '' + req1.body;  // 原文
+    if (text.length > 600) {
+        response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("文本不能超过600字");
+    } else {
+        console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+        console.log('text=' + text);  //////////////////////
+        // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
+        fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
+            if (error) {
+                console.error('写txt文件报错');
+                response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
+            } else {
+                async.auto({
+                    summary_task: summary_task,
+                    title_task: title_task,
+                    ner_task: ner_task,
+                    spo_task: ['summary_task', 'title_task', 'ner_task', function(callback, results) {
+                        /*
+                        取关系
+                        */
+                        request.post({
+                            url: "http://ltp.ruoben.com:8008/ltp",  //"http://ltp-svc.default:12345/ltp",
+                            form: {
+                                s: text
+                            },
+                            timeout: 300000
+                        }, function (err, res, body) {
+                            if (err) {
+                                callback(err.toString());
                             } else {
-                                /*
-                                取标题
-                                */
-                                var options = {
-                                    hostname: 'aip.baidubce.com',
-                                    path: '/rpc/2.0/nlp/v1/news_summary?charset=UTF-8&access_token=' + access_token,
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    }
-                                };
-                                const req = https.request(options, function (res) {
-                                    var body = [];
-                                    res.on('data', function(chunk) {
-                                        body.push(chunk);
-                                    }).on('end', function() {
-                                        var data = JSON.parse(Buffer.concat(body).toString());
-                                        var title = data['summary'];  // 标题
-                                        console.log('title=' + title);  /////////////////
-                                        /*
-                                        取原文中的ner
-                                        */
-                                        request.post({
-                                            url: "http://dd-ner-4in1-svc.default",
-                                            body: text
-                                        }, function (err, res, body) {
-                                            if (err) {
-                                                console.error(err);
-                                                done(err.toString());
-                                            } else {
-                                                if (res.statusCode === 200) {
-                                                    var json = JSON.parse(body);
-                                                    var ner = [];
-                                                    for(var i = 0; i < json['sentences'].length; i++) {
-                                                        for(var j = 0; j < json['sentences'][i]['tokens'].length; j++) {
-                                                            var n = json['sentences'][i]['tokens'][j].ner;
-                                                            if (n === 'PERSON' || n === 'FOREIGN' || n === 'ORG' || n === 'FOREIGN_ORG' || n === 'PLACE' || n === 'FOREIGN_PLACE') {
-                                                                ner.push(json['sentences'][i]['tokens'][j].word);
+                                if (res.statusCode === 200) {
+                                    xmlParser.parseString(body, function (err, obj) {
+                                        if (err) {
+                                            callback(err.toString());
+                                        } else {
+                                            var spo = [];
+                                            var paras = obj.xml4nlp.doc.para;
+                                            if (!(paras instanceof Array)) {
+                                                paras = [paras];
+                                            }
+                                            for(var para_idx = 0; para_idx < paras.length; para_idx++) {
+                                                var sents = paras[para_idx].sent;
+                                                if (!(sents instanceof Array)) {
+                                                    sents = [sents];
+                                                }
+                                                for(var sent_idx = 0; sent_idx < sents.length; sent_idx++) {
+                                                    var words = sents[sent_idx].word;
+                                                    if (!(words instanceof Array)) {
+                                                        words = [words];
+                                                    }
+                                                    for(var word_idx = 0; word_idx < words.length; word_idx++) {
+                                                        var word = words[word_idx];
+                                                        if (word.pos === 'v' && word.arg && word.arg instanceof Array) {
+                                                            var args = word.arg;
+                                                            var A0 = [], A1 = [], A2 = [], LOC = [], ADV = [], CMP = [];
+                                                            for(var arg_idx = 0; arg_idx < args.length; arg_idx++) {
+                                                                var arg = args[arg_idx];
+                                                                if (arg.type === 'A0') {
+                                                                    var str = "";
+                                                                    for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
+                                                                        if (words[a].pos === 'ws') {
+                                                                            str += words[a].cont + ' ';
+                                                                        } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
+                                                                            str += words[a].cont + words[a+1].cont;
+                                                                        } else {
+                                                                            str += words[a].cont;
+                                                                        }
+                                                                    }
+                                                                    A0.push(str.trim());
+                                                                } else if (arg.type === 'A1') {
+                                                                    var str = "";
+                                                                    for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
+                                                                        if (words[a].pos === 'ws') {
+                                                                            str += words[a].cont + ' ';
+                                                                        } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
+                                                                            str += words[a].cont + words[a+1].cont;
+                                                                        } else {
+                                                                            str += words[a].cont;
+                                                                        }
+                                                                    }
+                                                                    A1.push(str.trim());
+                                                                } else if (arg.type === 'A2') {
+                                                                    var str = "";
+                                                                    for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
+                                                                        str += words[a].cont;
+                                                                    }
+                                                                    A2.push(str);
+                                                                } else if (arg.type === 'LOC') {
+                                                                    var str = "";
+                                                                    for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
+                                                                        str += words[a].cont;
+                                                                    }
+                                                                    LOC.push(str);
+                                                                }
+                                                            }
+                                                            var f = false;
+                                                            if (word_idx > 0) {
+                                                                for(var ii = word_idx - 1; ii >= 0; ii--) {
+                                                                    if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && !f) {
+                                                                        ADV.unshift(words[ii].cont);
+                                                                    } else if (!f) {
+                                                                        f = true;
+                                                                    } else if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && words[ii].pos === 'd' && words[ii].parent === "" + word_idx) {
+                                                                        ADV.unshift(words[ii].cont);
+                                                                    }
+                                                                }
+                                                            }
+                                                            for(var iii = word_idx + 1; iii <= words.length; iii++) {
+                                                                if (words[iii].relate === 'CMP' || words[iii].relate === 'RAD') {
+                                                                    CMP.push(words[iii].cont);
+                                                                } else {
+                                                                    break;
+                                                                }
+                                                            }
+                                                            if (A0.length > 0 && A1.length > 0) {  // 主谓 + 动宾
+                                                                if (A2.length > 0 && ['使', '让'].indexOf(word.cont) >= 0) {
+                                                                    spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '') + A2.join('，').replace(/，|,$/, '')]);
+                                                                } else if (A2.length > 0 && (A2.join('').indexOf('以') === 0 || A2.join('').indexOf('从') === 0 || A2.join('').indexOf('为') === 0 || A2.join('').indexOf('对') === 0)) {
+                                                                    spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + A2.join('').replace(/，|,$/, '') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
+                                                                } else {
+                                                                    spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
+                                                                }
+                                                            } else if (A0.length > 0 && LOC.length > 0) {  // 主谓 + 介宾
+                                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), LOC.join('，').replace(/，|,$/, '')]);
+                                                            } else if (A1.length > 0 && A2.length > 0) {  // 宾语前置
+                                                                spo.push(['' + para_idx, A1.join('，').replace(/，|,$/, ''), ADV.join('') + "被" + word.cont + CMP.join(''), A2.join('，').replace(/，|,$/, '')]);
                                                             }
                                                         }
                                                     }
-                                                    ner = _.uniq(ner);
-                                                    ner = _.filter(ner, function(word) {
-                                                        return word.length > 1;
-                                                    });
-                                                    console.log('speaker=' + speaker + ', ner=' + JSON.stringify(ner));  ///////////////////
-                                                    /*
-                                                    取关系
-                                                    */
-                                                    request.post({
-                                                        url: "http://ltp-svc.default:12345/ltp",
-                                                        form: {
-                                                            s: '' + req1.body
-                                                        },
-                                                        timeout: 120000
-                                                    }, function (err, res, body) {
-                                                        if (err) {
-                                                            console.error(err);
-                                                            response.status(500).end(err.toString());
-                                                        } else {
-                                                            if (res.statusCode === 200) {
-                                                                xmlParser.parseString(body, function (err, obj) {
-                                                                    if (err) {
-                                                                        console.error(err);
-                                                                        response.status(500).end(err.toString());
-                                                                    } else {
-                                                                        var spo = [];
-                                                                        var paras = obj.xml4nlp.doc.para;
-                                                                        if (!(paras instanceof Array)) {
-                                                                            paras = [paras];
-                                                                        }
-                                                                        for(var para_idx = 0; para_idx < paras.length; para_idx++) {
-                                                                            var sents = paras[para_idx].sent;
-                                                                            if (!(sents instanceof Array)) {
-                                                                                sents = [sents];
-                                                                            }
-                                                                            for(var sent_idx = 0; sent_idx < sents.length; sent_idx++) {
-                                                                                var words = sents[sent_idx].word;
-                                                                                if (!(words instanceof Array)) {
-                                                                                    words = [words];
-                                                                                }
-                                                                                for(var word_idx = 0; word_idx < words.length; word_idx++) {
-                                                                                    var word = words[word_idx];
-                                                                                    if (word.pos === 'v' && word.arg && word.arg instanceof Array) {
-                                                                                        var args = word.arg;
-                                                                                        var A0 = [], A1 = [], A2 = [], LOC = [], ADV = [], CMP = [];
-                                                                                        for(var arg_idx = 0; arg_idx < args.length; arg_idx++) {
-                                                                                            var arg = args[arg_idx];
-                                                                                            if (arg.type === 'A0') {
-                                                                                                var str = "";
-                                                                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                                                                    if (words[a].pos === 'ws') {
-                                                                                                        str += words[a].cont + ' ';
-                                                                                                    } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
-                                                                                                        str += words[a].cont + words[a+1].cont;
-                                                                                                    } else {
-                                                                                                        str += words[a].cont;
-                                                                                                    }
-                                                                                                }
-                                                                                                A0.push(str.trim());
-                                                                                            } else if (arg.type === 'A1') {
-                                                                                                var str = "";
-                                                                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                                                                    if (words[a].pos === 'ws') {
-                                                                                                        str += words[a].cont + ' ';
-                                                                                                    } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
-                                                                                                        str += words[a].cont + words[a+1].cont;
-                                                                                                    } else {
-                                                                                                        str += words[a].cont;
-                                                                                                    }
-                                                                                                }
-                                                                                                A1.push(str.trim());
-                                                                                            } else if (arg.type === 'A2') {
-                                                                                                var str = "";
-                                                                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                                                                    str += words[a].cont;
-                                                                                                }
-                                                                                                A2.push(str);
-                                                                                            } else if (arg.type === 'LOC') {
-                                                                                                var str = "";
-                                                                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                                                                    str += words[a].cont;
-                                                                                                }
-                                                                                                LOC.push(str);
-                                                                                            }
-                                                                                        }
-                                                                                        var f = false;
-                                                                                        if (word_idx > 0) {
-                                                                                            for(var ii = word_idx - 1; ii >= 0; ii--) {
-                                                                                                if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && !f) {
-                                                                                                    ADV.unshift(words[ii].cont);
-                                                                                                } else if (!f) {
-                                                                                                    f = true;
-                                                                                                } else if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && words[ii].pos === 'd' && words[ii].parent === "" + word_idx) {
-                                                                                                    ADV.unshift(words[ii].cont);
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                        for(var iii = word_idx + 1; iii <= words.length; iii++) {
-                                                                                            if (words[iii].relate === 'CMP' || words[iii].relate === 'RAD') {
-                                                                                                CMP.push(words[iii].cont);
-                                                                                            } else {
-                                                                                                break;
-                                                                                            }
-                                                                                        }
-                                                                                        if (A0.length > 0 && A1.length > 0) {  // 主谓 + 动宾
-                                                                                            if (A2.length > 0 && ['使', '让'].indexOf(word.cont) >= 0) {
-                                                                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '') + A2.join('，').replace(/，|,$/, '')]);
-                                                                                            } else if (A2.length > 0 && (A2.join('').indexOf('以') === 0 || A2.join('').indexOf('从') === 0 || A2.join('').indexOf('为') === 0 || A2.join('').indexOf('对') === 0)) {
-                                                                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + A2.join('').replace(/，|,$/, '') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
-                                                                                            } else {
-                                                                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
-                                                                                            }
-                                                                                        } else if (A0.length > 0 && LOC.length > 0) {  // 主谓 + 介宾
-                                                                                            spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), LOC.join('，').replace(/，|,$/, '')]);
-                                                                                        } else if (A1.length > 0 && A2.length > 0) {  // 宾语前置
-                                                                                            spo.push(['' + para_idx, A1.join('，').replace(/，|,$/, ''), ADV.join('') + "被" + word.cont + CMP.join(''), A2.join('，').replace(/，|,$/, '')]);
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                        var retain = [];
-                                                                        for(var b = 0; b < spo.length; b++) {
-                                                                            var contain = false;
-                                                                            if (spo[b][3].length > 1) {
-                                                                                L: for(var c = 0; c < ner.length; c++) {
-                                                                                    if (spo[b][1].indexOf(ner[c]) >= 0) {
-                                                                                        contain = true;
-                                                                                        break L;
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                            if (contain) {
-                                                                                retain.push(spo[b]);
-                                                                            }
-                                                                        }
-                                                                        console.log("spo=" + JSON.stringify(retain));  //////////////////
-                                                                        fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': retain}), function (err3) {
-                                                                            // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': sum_obj, 'title': title, 'spo': retain}), function (err3) {
-                                                                            if (err3) {
-                                                                                console.error('写mnd文件报错');
-                                                                                response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写mnd文件报错");
-                                                                            } else {
-                                                                                response.header('Content-Type', 'text/plain; charset=utf-8').status(200).end("success");
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                console.error("调用ltp接口报错");
-                                                                response.header('Content-Type', 'text/plain; charset=utf-8').status(res.statusCode).end("调用ltp接口报错");
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    console.error("调用ner接口报错");
-                                                    done("调用ner接口报错");
                                                 }
                                             }
-                                        });
+                                            var retain = [];
+                                            for(var b = 0; b < spo.length; b++) {
+                                                var contain = false;
+                                                if (spo[b][3].length > 1) {
+                                                    L: for(var c = 0; c < results.ner_task.length; c++) {
+                                                        if (spo[b][1].indexOf(results.ner_task[c]) >= 0) {
+                                                            contain = true;
+                                                            break L;
+                                                        }
+                                                    }
+                                                }
+                                                if (contain) {
+                                                    retain.push(spo[b]);
+                                                }
+                                            }
+                                            console.log("spo=" + JSON.stringify(retain));  //////////////////
+                                            // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                                            fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                                                if (err3) {
+                                                    callback("写mnd文件报错");
+                                                } else {
+                                                    callback(null);
+                                                }
+                                            });
+                                        }
                                     });
-                                });
-                                req.on('error', function(err) {
-                                    console.error(err);
-                                    response.status(500).end(err.toString());
-                                });
-                                var len = Math.round(text.length * 0.15);
-                                if (len < 50) {
-                                    len = 50;
-                                } else if (len > 100) {
-                                    len = 100;
+                                } else {
+                                    callback("调用ltp接口报错");
                                 }
-                                var param = JSON.stringify({
-                                    'content': text,
-                                    'max_summary_len': len
-                                });
-                                req.write(param);
-                                req.end();
                             }
                         });
+                    }]
+                }, function(err) {
+                    if (err) {
+                        console.error(err);
+                        response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end(err);
                     } else {
-                        console.error("调用summary接口报错");
-                        response.header('Content-Type', 'text/plain; charset=utf-8').status(res.statusCode).end("调用summary接口报错");
+                        response.header('Content-Type', 'text/plain; charset=utf-8').status(200).end("success");
                     }
-                }
-            });
-        }
-    });
+                });
+            }
+        });
+    }
 });
 // 取摘要和思维导图，用于test
 app.get("/test-resource", function (req, res) {
-    var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
-    // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+    // var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
+    var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
     if (exist) {
-        fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.sum", function (err, summary) {
-        // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", function (err, summary) {
+        // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.sum", function (err, summary) {
+        fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", function (err, summary) {
             if (err) {
                 console.error(err);
                 res.status(500).end(err.toString());
             } else {
-                fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
-                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+                // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
+                fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                     if (err) {
                         console.error(err);
                         res.status(500).end(err.toString());
@@ -1028,11 +1044,11 @@ app.get("/test-resource", function (req, res) {
 // 取speaker的思维导图
 app.get("/getmind/:recordId/:speakerId", function (req, res) {
     if (req.params.recordId === 'test') {
-        var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
-        // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+        // var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
+        var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
         if (exist) {
-            fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
-                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+            // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
+                fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                 if (err) {
                     console.error(err);
                     res.status(500).end(err.toString());
