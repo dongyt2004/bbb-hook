@@ -46,11 +46,8 @@ https.get({
 );
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 如果没有/var/bigbluebutton/published/presentation/test目录，则创建之
-/*if (!fs.existsSync("/var/bigbluebutton/published/presentation/test")) {
+if (!fs.existsSync("/var/bigbluebutton/published/presentation/test")) {
     fs.mkdirSync("/var/bigbluebutton/published/presentation/test");
-}*/
-if (!fs.existsSync("C:\\Users\\dongyt\\Desktop\\test")) {
-    fs.mkdirSync("C:\\Users\\dongyt\\Desktop\\test");
 }
 /** ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- **/
 // 创建bbb回调钩子
@@ -738,7 +735,7 @@ var text = '';
 // 取摘要任务
 var summary_task = function(callback) {
     request.post({
-        url: "http://summary.ruoben.com:8008/summary",  //"http://summary-svc.default:8080/summary",
+        url: "http://summary-svc.default:8080/summary",
         json: true,
         body: {text: text},
         timeout: 300000
@@ -753,8 +750,8 @@ var summary_task = function(callback) {
                 for(var i=0; i<lines.length; i++) {
                     sum_obj['' + i] = lines[i];
                 }
-                // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.sum", summary, function (err2) {
-                fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", summary, function (err2) {
+                fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.sum", summary, function (err2) {
+                // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", summary, function (err2) {
                     if (err2) {
                         callback("写sum文件报错");
                     } else {
@@ -807,7 +804,7 @@ var title_task = function(callback) {
 // 取原文中的ner任务
 var ner_task = function(callback) {
     request.post({
-        url: "http://dd-ner-4in1.ruoben.com:8008",  //"http://dd-ner-4in1-svc.default",
+        url: "http://dd-ner-4in1-svc.default",
         body: text
     }, function (err, res, body) {
         if (err) {
@@ -844,8 +841,8 @@ app.post("/test-text", function (req1, response) {
     } else {
         console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
         console.log('text=' + text);  //////////////////////
-        // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
-        fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
+        fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
+        // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
             if (error) {
                 console.error('写txt文件报错');
                 response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
@@ -859,7 +856,7 @@ app.post("/test-text", function (req1, response) {
                         取关系
                         */
                         request.post({
-                            url: "http://ltp.ruoben.com:8008/ltp",  //"http://ltp-svc.default:12345/ltp",
+                            url: "http://ltp-svc.default:12345/ltp",
                             form: {
                                 s: text
                             },
@@ -985,8 +982,8 @@ app.post("/test-text", function (req1, response) {
                                                 }
                                             }
                                             console.log("spo=" + JSON.stringify(retain));  //////////////////
-                                            // fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
-                                            fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                                            fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                                            // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
                                                 if (err3) {
                                                     callback("写mnd文件报错");
                                                 } else {
@@ -1015,17 +1012,17 @@ app.post("/test-text", function (req1, response) {
 });
 // 取摘要和思维导图，用于test
 app.get("/test-resource", function (req, res) {
-    // var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
-    var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+    var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
+    // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
     if (exist) {
-        // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.sum", function (err, summary) {
-        fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", function (err, summary) {
+        fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.sum", function (err, summary) {
+        // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.sum", function (err, summary) {
             if (err) {
                 console.error(err);
                 res.status(500).end(err.toString());
             } else {
-                // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
-                fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+                fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
+                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                     if (err) {
                         console.error(err);
                         res.status(500).end(err.toString());
@@ -1044,11 +1041,11 @@ app.get("/test-resource", function (req, res) {
 // 取speaker的思维导图
 app.get("/getmind/:recordId/:speakerId", function (req, res) {
     if (req.params.recordId === 'test') {
-        // var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
-        var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
+        var exist = fs.existsSync("/var/bigbluebutton/published/presentation/test/webcams.mnd");
+        // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
         if (exist) {
-            // fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
-                fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+            fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
+                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                 if (err) {
                     console.error(err);
                     res.status(500).end(err.toString());
