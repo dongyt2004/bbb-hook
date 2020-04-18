@@ -1045,7 +1045,7 @@ app.get("/getmind/:recordId/:speakerId", function (req, res) {
         // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
         if (exist) {
             fs.readFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", function (err, mnd) {
-                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+            // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                 if (err) {
                     console.error(err);
                     res.status(500).end(err.toString());
@@ -1063,7 +1063,7 @@ app.get("/getmind/:recordId/:speakerId", function (req, res) {
         // var exist = fs.existsSync("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd");
         if (exist) {
             fs.readFile("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams." + req.params.speakerId + ".mnd", function (err, mnd) {
-                // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
+            // fs.readFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", function (err, mnd) {
                 if (err) {
                     console.error(err);
                     res.status(500).end(err.toString());
