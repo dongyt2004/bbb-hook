@@ -573,29 +573,29 @@ var speaker_spo_task = function(callback, results) {
 app.post("/text/:recordId", function (req, response) {
     console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
     // 删除所有相关文件
-    var files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video", 'txt');
+    var files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video", 'txt');
     // var files = getFilenamesByExt("C:\\Users\\dongyt\\Desktop\\新建文件夹\\", 'txt');
     for(var i = 0; i < files.length; i++) {
-        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/" + files[i]);
+        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/" + files[i]);
         // fs.unlinkSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\" + files[i]);
     }
-    files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video", 'sum');
+    files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video", 'sum');
     // files = getFilenamesByExt("C:\\Users\\dongyt\\Desktop\\新建文件夹\\", 'sum');
     for(var i = 0; i < files.length; i++) {
-        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/" + files[i]);
+        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/" + files[i]);
         // fs.unlinkSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\" + files[i]);
     }
-    files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video", 'mnd');
+    files = getFilenamesByExt("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video", 'mnd');
     // files = getFilenamesByExt("C:\\Users\\dongyt\\Desktop\\新建文件夹\\", 'mnd');
     for(var i = 0; i < files.length; i++) {
-        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/" + files[i]);
+        fs.unlinkSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/" + files[i]);
         // fs.unlinkSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\" + files[i]);
     }
 
     var obj = req.body;
     console.log('json=' + JSON.stringify(obj));  //////////////////////
     // 写webcams.txt文件
-    fs.writeFileSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/webcams.txt", JSON.stringify(obj));
+    fs.writeFileSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams.txt", JSON.stringify(obj));
     // fs.writeFileSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams.txt", JSON.stringify(obj));
 
     var array = obj.asr;
@@ -607,13 +607,13 @@ app.post("/text/:recordId", function (req, response) {
             content += '。';
         }
         // 追加到speaker txt文件
-        fs.appendFileSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/webcams." + array[index]['speaker'] + ".txt", content + '\n');
+        fs.appendFileSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams." + array[index]['speaker'] + ".txt", content + '\n');
         // fs.appendFileSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams." + array[index]['speaker'] + ".txt", content + '\n');
     }
     speakers = _.uniq(speakers);
 
     eachAsync(speakers, function(speaker, index, done) {
-        var text = '' + fs.readFileSync("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/webcams." + speaker + ".txt");
+        var text = '' + fs.readFileSync("/var/bigbluebutton/published/presentation/" + req.params.recordId + "/video/webcams." + speaker + ".txt");
         // var text = '' + fs.readFileSync("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams." + speaker + ".txt");
         console.log('speaker=' + speaker + ', text=' + text);  //////////////////////
         async.auto({
@@ -892,8 +892,8 @@ var spo_task = function(callback, results) {
     });
 };
 // 接收语音识别得到的文本并生成摘要和脑图
-app.post("/test-text", function (req1, response) {
-    var text = '' + req1.body;  // 原文
+app.post("/test-text", function (req, response) {
+    var text = '' + req.body;  // 原文
     if (text.length > 600) {
         response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("文本不能超过600字");
     } else {
