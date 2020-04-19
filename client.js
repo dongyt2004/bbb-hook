@@ -329,23 +329,23 @@ var speaker_summary_task = function(callback, results) {
     request.post({
         url: "http://summary-svc.default:8080/summary",  //"http://summary.ruoben.com:8008/summary",
         json: true,
-        body: {speaker: results.speaker_text_task[0], text: results.speaker_text_task[1]},
+        body: {speaker: results.speaker_text_task[1], text: results.speaker_text_task[2]},
         timeout: 600000
     }, function (err, res, summary) {
         if (err) {
             callback(err.toString());
         } else {
             if (res.statusCode === 200) {
-                console.log('speaker=' + results.speaker_text_task[0] + ', summary=' + summary);  /////////////////
+                console.log('speaker=' + results.speaker_text_task[1] + ', summary=' + summary);  /////////////////
                 var sum_obj = {};
                 var lines = summary.split('\n');
                 for(var i=0; i<lines.length; i++) {
                     sum_obj['' + i] = lines[i];
                 }
-                fs.writeFile("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/webcams." + results.speaker_text_task[0] + ".sum", summary, function (err2) {
-                // fs.writeFile("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams." + results.speaker_text_task[0] + ".sum", summary, function (err2) {
+                fs.writeFile("/var/bigbluebutton/published/presentation/" +  results.speaker_text_task[0] + "/video/webcams." + results.speaker_text_task[1] + ".sum", summary, function (err2) {
+                // fs.writeFile("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams." + results.speaker_text_task[1] + ".sum", summary, function (err2) {
                     if (err2) {
-                        callback('写' + results.speaker_text_task[0] + ' speaker sum文件报错');
+                        callback('写' + results.speaker_text_task[1] + ' speaker sum文件报错');
                     } else {
                         callback(null, sum_obj);
                     }
@@ -373,21 +373,21 @@ var speaker_title_task = function(callback, results) {
         }).on('end', function() {
             var data = JSON.parse(Buffer.concat(body).toString());
             var title = data['summary'];  // 标题
-            console.log('speaker=' + results.speaker_text_task[0] + ', title=' + title);  /////////////////
+            console.log('speaker=' + results.speaker_text_task[1] + ', title=' + title);  /////////////////
             callback(null, title);
         });
     });
     req.on('error', function(err) {
         callback(err.toString());
     });
-    var len = Math.round(results.speaker_text_task[1].length * 0.15);
+    var len = Math.round(results.speaker_text_task[2].length * 0.15);
     if (len < 50) {
         len = 50;
     } else if (len > 100) {
         len = 100;
     }
     var param = JSON.stringify({
-        'content': results.speaker_text_task[1],
+        'content': results.speaker_text_task[2],
         'max_summary_len': len
     });
     req.write(param);
@@ -397,7 +397,7 @@ var speaker_title_task = function(callback, results) {
 var speaker_ner_task = function(callback, results) {
     request.post({
         url: "http://dd-ner-4in1-svc.default",   //"http://dd-ner-4in1.ruoben.com:8008",
-        body: results.speaker_text_task[1]
+        body: results.speaker_text_task[2]
     }, function (err, res, body) {
         if (err) {
             callback(err.toString());
@@ -417,7 +417,7 @@ var speaker_ner_task = function(callback, results) {
                 ner = _.filter(ner, function(word) {
                     return word.length > 1;
                 });
-                console.log('speaker=' + results.speaker_text_task[0] + ', ner=' + JSON.stringify(ner));  ///////////////////
+                console.log('speaker=' + results.speaker_text_task[1] + ', ner=' + JSON.stringify(ner));  ///////////////////
                 callback(null, ner);
             } else {
                 callback("调用ner接口报错");
@@ -430,7 +430,7 @@ var speaker_spo_task = function(callback, results) {
     request.post({
         url: "http://ltp-svc.default:12345/ltp",   //"http://ltp.ruoben.com:8008/ltp",
         form: {
-            s: results.speaker_text_task[1]
+            s: results.speaker_text_task[2]
         }
     }, function (err, res, body) {
         if (err) {
@@ -552,11 +552,11 @@ var speaker_spo_task = function(callback, results) {
                                 retain.push(spo[b]);
                             }
                         }
-                        console.log('speaker=' + results.speaker_text_task[0] + ', spo=' + JSON.stringify(retain));  //////////////////
-                        fs.writeFile("/var/bigbluebutton/published/presentation/" + req1.params.recordId + "/video/webcams." + results.speaker_text_task[0] + ".mnd", JSON.stringify({'speaker': results.speaker_text_task[0], 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                        console.log('speaker=' + results.speaker_text_task[1] + ', spo=' + JSON.stringify(retain));  //////////////////
+                        fs.writeFile("/var/bigbluebutton/published/presentation/" + results.speaker_text_task[0] + "/video/webcams." + results.speaker_text_task[1] + ".mnd", JSON.stringify({'speaker': results.speaker_text_task[1], 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
                         // fs.writeFile("C:\\Users\\dongyt\\Desktop\\新建文件夹\\webcams." + results.speaker_text_task[0] + ".mnd", JSON.stringify({'speaker': results.speaker_text_task[0], 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
                             if (err3) {
-                                callback("写" + results.speaker_text_task[0] + " speaker mnd文件报错");
+                                callback("写" + results.speaker_text_task[1] + " speaker mnd文件报错");
                             } else {
                                 callback(null);
                             }
@@ -618,7 +618,7 @@ app.post("/text/:recordId", function (req, response) {
         console.log('speaker=' + speaker + ', text=' + text);  //////////////////////
         async.auto({
             speaker_text_task: function(callback) {
-                callback(null, speaker, text);
+                callback(null, req.params.recordId, speaker, text);
             },
             summary_task: ['speaker_text_task', speaker_summary_task],
             title_task: ['speaker_text_task', speaker_title_task],
