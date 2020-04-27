@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dongyt2004/bbb-hook.git"
+    "url": "git+http://gitlab.ruoben.com:8008/dongyt2004/bbb-hook.git"
   },
   "keywords": [
     "bbb",
@@ -23,9 +23,9 @@
   "author": "董玉涛",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dongyt2004/bbb-hook/issues"
+    "url": "http://gitlab.ruoben.com:8008/dongyt2004/bbb-hook/issues"
   },
-  "homepage": "https://github.com/dongyt2004/bbb-hook#readme",
+  "homepage": "http://gitlab.ruoben.com:8008/dongyt2004/bbb-hook#readme",
   "devDependencies": {
     "parcel-bundler": "1.12.4"
   },
