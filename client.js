@@ -327,7 +327,7 @@ app.get("/gettext/:recordId/:speakerId", function (req, res) {
 // 取摘要任务
 var speaker_summary_task = function(callback, results) {
     request.post({
-        url: "http://summary-svc.default:8080/summary",  //"http://summary.ruoben.com:8008/summary",
+        url: "http://summary-svc.nlp:8080/summary",  //"http://summary.ruoben.com:8008/summary",
         json: true,
         body: {speaker: results.speaker_text_task[1], text: results.speaker_text_task[2]},
         timeout: 600000
@@ -396,7 +396,7 @@ var speaker_title_task = function(callback, results) {
 // 取原文中的ner任务
 var speaker_ner_task = function(callback, results) {
     request.post({
-        url: "http://dd-ner-4in1-svc.default",   //"http://dd-ner-4in1.ruoben.com:8008",
+        url: "http://dd-ner-4in1-svc.nlp",   //"http://dd-ner-4in1.ruoben.com:8008",
         body: results.speaker_text_task[2]
     }, function (err, res, body) {
         if (err) {
@@ -428,7 +428,7 @@ var speaker_ner_task = function(callback, results) {
 // 取关系任务
 var speaker_spo_task = function(callback, results) {
     request.post({
-        url: "http://ltp-svc.default:12345/ltp",   //"http://ltp.ruoben.com:8008/ltp",
+        url: "http://ltp-svc.nlp:12345/ltp",   //"http://ltp.ruoben.com:8008/ltp",
         form: {
             s: results.speaker_text_task[2]
         }
@@ -648,7 +648,7 @@ app.get("/", function (req, res) {
 // 取摘要任务
 var summary_task = function(callback, results) {
     request.post({
-        url: "http://summary-svc.default:8080/summary",   //"http://summary.ruoben.com:8008/summary",
+        url: "http://summary-svc.nlp:8080/summary",   //"http://summary.ruoben.com:8008/summary",
         json: true,
         body: {text: results.text_task},
         timeout: 600000
@@ -717,7 +717,7 @@ var title_task = function(callback, results) {
 // 取原文中的ner任务
 var ner_task = function(callback, results) {
     request.post({
-        url: "http://dd-ner-4in1-svc.default",   //"http://dd-ner-4in1.ruoben.com:8008",
+        url: "http://dd-ner-4in1-svc.nlp",   //"http://dd-ner-4in1.ruoben.com:8008",
         body: results.text_task
     }, function (err, res, body) {
         if (err) {
@@ -749,7 +749,7 @@ var ner_task = function(callback, results) {
 // 取关系任务
 var spo_task = function(callback, results) {
     request.post({
-        url: "http://ltp-svc.default:12345/ltp",  //"http://ltp.ruoben.com:8008/ltp",
+        url: "http://ltp-svc.nlp:12345/ltp",  //"http://ltp.ruoben.com:8008/ltp",
         form: {
             s: results.text_task
         },
