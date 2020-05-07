@@ -893,37 +893,33 @@ var spo_task = function(callback, results) {
 };
 // 接收语音识别得到的文本并生成摘要和脑图
 app.post("/test-text", function (req, response) {
+    console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
     var text = '' + req.body;  // 原文
-    if (text.length > 600) {
-        response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("文本不能超过600字");
-    } else {
-        console.log('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-        console.log('text=' + text);  //////////////////////
-        fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
+    console.log('text=' + text);  //////////////////////
+    fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
         // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
-            if (error) {
-                console.error('写txt文件报错');
-                response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
-            } else {
-                async.auto({
-                    text_task: function (callback) {
-                        callback(null, text);
-                    },
-                    summary_task: ['text_task', summary_task],
-                    title_task: ['text_task', title_task],
-                    ner_task: ['text_task', ner_task],
-                    spo_task: ['summary_task', 'title_task', 'ner_task', spo_task]
-                }, function(err) {
-                    if (err) {
-                        console.error(err);
-                        response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end(err);
-                    } else {
-                        response.header('Content-Type', 'text/plain; charset=utf-8').status(200).end("success");
-                    }
-                });
-            }
-        });
-    }
+        if (error) {
+            console.error('写txt文件报错');
+            response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
+        } else {
+            async.auto({
+                text_task: function (callback) {
+                    callback(null, text);
+                },
+                summary_task: ['text_task', summary_task],
+                title_task: ['text_task', title_task],
+                ner_task: ['text_task', ner_task],
+                spo_task: ['summary_task', 'title_task', 'ner_task', spo_task]
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end(err);
+                } else {
+                    response.header('Content-Type', 'text/plain; charset=utf-8').status(200).end("success");
+                }
+            });
+        }
+    });
 });
 // 取摘要和思维导图，用于test
 app.get("/test-resource", function (req, res) {
