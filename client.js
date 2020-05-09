@@ -327,7 +327,7 @@ app.get("/gettext/:recordId/:speakerId", function (req, res) {
 // 取摘要任务
 var speaker_summary_task = function(callback, results) {
     request.post({
-        url: "http://summary-svc.nlp:8080/summary",  //"http://summary.ruoben.com:8008/summary",
+        url: "http://summary-svc.nlp:8080",  //"http://summary.ruoben.com:8008",
         json: true,
         body: {speaker: results.speaker_text_task[1], text: results.speaker_text_task[2]},
         timeout: 600000
@@ -648,7 +648,7 @@ app.get("/", function (req, res) {
 // 取摘要任务
 var summary_task = function(callback, results) {
     request.post({
-        url: "http://summary-svc.nlp:8080/summary",   //"http://summary.ruoben.com:8008/summary",
+        url: "http://summary-svc.nlp:8080",   //"http://summary.ruoben.com:8008",
         json: true,
         body: {text: results.text_task},
         timeout: 600000
