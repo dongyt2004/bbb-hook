@@ -329,7 +329,7 @@ var speaker_summary_task = function(callback, results) {
     request.post({
         url: "http://partition-svc.nlp:8080",  //"http://summary.ruoben.com:8008",
         json: true,
-        body: {speaker: results.speaker_text_task[1], text: results.speaker_text_task[2]},
+        body: {text: results.speaker_text_task[2]},
         timeout: 600000
     }, function (err, res, summary) {
         if (err) {
