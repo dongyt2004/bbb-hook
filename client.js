@@ -722,12 +722,12 @@ var ner_task = function(callback, results) {
         var str = block + lines[i];
         if (str.length > 2000) {
             blocks.push(block);
-            block = lines[i];
+            block = lines[i] + '\n';
         } else {
-            block = str;
+            block = str + '\n';
         }
     }
-    blocks.push(block);
+    blocks.push(block.substr(0, block.length - 1));
     var ners = [];
     eachAsync(blocks, function(block, index, done) {
         request.post({
@@ -752,7 +752,7 @@ var ner_task = function(callback, results) {
                     ner = _.filter(ner, function(word) {
                         return word.length > 1;
                     });
-                    ners.concat(ner);
+                    ners = ners.concat(ner);
                     done();
                 } else {
                     done("调用ner接口报错");
