@@ -897,7 +897,7 @@ app.post("/test-text", function (req, response) {
     var text = '' + req.body;  // 原文
     console.log('text=' + text);  //////////////////////
     fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.txt", text, function (error) {
-        // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
+    // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.txt", text, function (error) {
         if (error) {
             console.error('写txt文件报错');
             response.header('Content-Type', 'text/plain; charset=utf-8').status(500).end("写txt文件报错");
