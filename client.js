@@ -708,7 +708,7 @@ var title_task = function(callback, results) {
         len = 100;
     }
     var param = JSON.stringify({
-        'content': results.text_task,
+        'content': results.text_task.substr(0, 2999),
         'max_summary_len': len
     });
     req.write(param);
@@ -716,33 +716,57 @@ var title_task = function(callback, results) {
 };
 // 取原文中的ner任务
 var ner_task = function(callback, results) {
-    request.post({
-        url: "http://dd-ner-4in1-svc.nlp",   //"http://dd-ner-4in1.ruoben.com:8008",
-        body: results.text_task
-    }, function (err, res, body) {
-        if (err) {
-            callback(err.toString());
+    var block = '', blocks = [];
+    var lines = results.text_task.split('\n');
+    for(var i=0; i<lines.length; i++) {
+        var str = block + lines[i];
+        if (str.length > 2000) {
+            blocks.push(block);
+            block = lines[i];
         } else {
-            if (res.statusCode === 200) {
-                var json = JSON.parse(body);
-                var ner = [];
-                for(var i = 0; i < json['sentences'].length; i++) {
-                    for(var j = 0; j < json['sentences'][i]['tokens'].length; j++) {
-                        var n = json['sentences'][i]['tokens'][j].ner;
-                        if (n === 'PERSON' || n === 'FOREIGN' || n === 'ORG' || n === 'FOREIGN_ORG' || n === 'PLACE' || n === 'FOREIGN_PLACE') {
-                            ner.push(json['sentences'][i]['tokens'][j].word);
+            block = str;
+        }
+    }
+    blocks.push(block);
+    var ners = [];
+    eachAsync(blocks, function(block, index, done) {
+        request.post({
+            url: "http://dd-ner-4in1-svc.nlp",   //"http://dd-ner-4in1.ruoben.com:8008",
+            body: block
+        }, function (err, res, body) {
+            if (err) {
+                done(err.toString());
+            } else {
+                if (res.statusCode === 200) {
+                    var json = JSON.parse(body);
+                    var ner = [];
+                    for(var i = 0; i < json['sentences'].length; i++) {
+                        for(var j = 0; j < json['sentences'][i]['tokens'].length; j++) {
+                            var n = json['sentences'][i]['tokens'][j].ner;
+                            if (n === 'PERSON' || n === 'FOREIGN' || n === 'ORG' || n === 'FOREIGN_ORG' || n === 'PLACE' || n === 'FOREIGN_PLACE') {
+                                ner.push(json['sentences'][i]['tokens'][j].word);
+                            }
                         }
                     }
+                    ner = _.uniq(ner);
+                    ner = _.filter(ner, function(word) {
+                        return word.length > 1;
+                    });
+                    ners.concat(ner);
+                    done();
+                } else {
+                    done("调用ner接口报错");
                 }
-                ner = _.uniq(ner);
-                ner = _.filter(ner, function(word) {
-                    return word.length > 1;
-                });
-                console.log('ner=' + JSON.stringify(ner));  ///////////////////
-                callback(null, ner);
-            } else {
-                callback("调用ner接口报错");
             }
+        });
+    }, function(error) {
+        if (error) {
+            console.error(error);
+            callback(error.toString());
+        } else {
+            ners = _.uniq(ners);
+            console.log('ner=' + JSON.stringify(ners));  ///////////////////
+            callback(null, ners);
         }
     });
 };
