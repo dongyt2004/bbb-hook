@@ -720,7 +720,7 @@ var ner_task = function(callback, results) {
     var lines = results.text_task.split('\n');
     for(var i=0; i<lines.length; i++) {
         var str = block + lines[i];
-        if (str.length > 2000) {
+        if (str.length > 1500) {
             blocks.push(block);
             block = lines[i] + '\n';
         } else {
