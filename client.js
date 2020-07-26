@@ -784,7 +784,7 @@ var spo_task = function(callback, results) {
             callback(err.toString());
         } else {
             if (res.statusCode === 200) {
-                console.log("spo=" + JSON.stringify(body));  //////////////////
+                console.log("spo=" + body);  //////////////////
                 fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': body}), function (err3) {
                 // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
                     if (err3) {
