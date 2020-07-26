@@ -773,7 +773,7 @@ var ner_task = function(callback, results) {
 // 取关系任务
 var spo_task = function(callback, results) {
     request.post({
-        url: "http://ltp-svc.nlp:12345/ltp",  //"http://ltp.ruoben.com:8008/ltp",
+        url: "http://triple-svc.nlp:50000",  //"http://triple.ruoben.com:8008",
         form: {
             s: results.text_task
         },
@@ -783,130 +783,13 @@ var spo_task = function(callback, results) {
             callback(err.toString());
         } else {
             if (res.statusCode === 200) {
-                xmlParser.parseString(body, function (err, obj) {
-                    if (err) {
-                        callback(err.toString());
+                console.log("spo=" + JSON.stringify(body));  //////////////////
+                fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                    if (err3) {
+                        callback("写mnd文件报错");
                     } else {
-                        var spo = [];
-                        var paras = obj.xml4nlp.doc.para;
-                        if (!(paras instanceof Array)) {
-                            paras = [paras];
-                        }
-                        for(var para_idx = 0; para_idx < paras.length; para_idx++) {
-                            var sents = paras[para_idx].sent;
-                            if (!(sents instanceof Array)) {
-                                sents = [sents];
-                            }
-                            for(var sent_idx = 0; sent_idx < sents.length; sent_idx++) {
-                                var words = sents[sent_idx].word;
-                                if (!(words instanceof Array)) {
-                                    words = [words];
-                                }
-                                for(var word_idx = 0; word_idx < words.length; word_idx++) {
-                                    var word = words[word_idx];
-                                    if (word.pos === 'v' && word.arg && word.arg instanceof Array) {
-                                        var args = word.arg;
-                                        var A0 = [], A1 = [], A2 = [], LOC = [], ADV = [], CMP = [];
-                                        for(var arg_idx = 0; arg_idx < args.length; arg_idx++) {
-                                            var arg = args[arg_idx];
-                                            if (arg.type === 'A0') {
-                                                var str = "";
-                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                    if (words[a].pos === 'ws') {
-                                                        str += words[a].cont + ' ';
-                                                    } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
-                                                        str += words[a].cont + words[a+1].cont;
-                                                    } else {
-                                                        str += words[a].cont;
-                                                    }
-                                                }
-                                                A0.push(str.trim());
-                                            } else if (arg.type === 'A1') {
-                                                var str = "";
-                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                    if (words[a].pos === 'ws') {
-                                                        str += words[a].cont + ' ';
-                                                    } else if (words[a].pos === 'm' && a === parseInt(arg.end) && a < words.length - 1 && words[a+1].pos === 'q') {
-                                                        str += words[a].cont + words[a+1].cont;
-                                                    } else {
-                                                        str += words[a].cont;
-                                                    }
-                                                }
-                                                A1.push(str.trim());
-                                            } else if (arg.type === 'A2') {
-                                                var str = "";
-                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                    str += words[a].cont;
-                                                }
-                                                A2.push(str);
-                                            } else if (arg.type === 'LOC') {
-                                                var str = "";
-                                                for(var a = parseInt(arg.beg); a <= parseInt(arg.end); a++) {
-                                                    str += words[a].cont;
-                                                }
-                                                LOC.push(str);
-                                            }
-                                        }
-                                        var f = false;
-                                        if (word_idx > 0) {
-                                            for(var ii = word_idx - 1; ii >= 0; ii--) {
-                                                if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && !f) {
-                                                    ADV.unshift(words[ii].cont);
-                                                } else if (!f) {
-                                                    f = true;
-                                                } else if ((words[ii].relate === 'ADV' || words[ii].relate === 'RAD' || words[ii].relate === 'LAD') && words[ii].pos === 'd' && words[ii].parent === "" + word_idx) {
-                                                    ADV.unshift(words[ii].cont);
-                                                }
-                                            }
-                                        }
-                                        for(var iii = word_idx + 1; iii <= words.length; iii++) {
-                                            if (words[iii].relate === 'CMP' || words[iii].relate === 'RAD') {
-                                                CMP.push(words[iii].cont);
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        if (A0.length > 0 && A1.length > 0) {  // 主谓 + 动宾
-                                            if (A2.length > 0 && ['使', '让'].indexOf(word.cont) >= 0) {
-                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '') + A2.join('，').replace(/，|,$/, '')]);
-                                            } else if (A2.length > 0 && (A2.join('').indexOf('以') === 0 || A2.join('').indexOf('从') === 0 || A2.join('').indexOf('为') === 0 || A2.join('').indexOf('对') === 0)) {
-                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + A2.join('').replace(/，|,$/, '') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
-                                            } else {
-                                                spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), A1.join('，').replace(/，|,$/, '')]);
-                                            }
-                                        } else if (A0.length > 0 && LOC.length > 0) {  // 主谓 + 介宾
-                                            spo.push(['' + para_idx, A0.join('，').replace(/，|,$/, ''), ADV.join('') + word.cont + CMP.join(''), LOC.join('，').replace(/，|,$/, '')]);
-                                        } else if (A1.length > 0 && A2.length > 0) {  // 宾语前置
-                                            spo.push(['' + para_idx, A1.join('，').replace(/，|,$/, ''), ADV.join('') + "被" + word.cont + CMP.join(''), A2.join('，').replace(/，|,$/, '')]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        var retain = [];
-                        for(var b = 0; b < spo.length; b++) {
-                            var contain = false;
-                            if (spo[b][3].length > 1) {
-                                L: for(var c = 0; c < results.ner_task.length; c++) {
-                                    if (spo[b][1].indexOf(results.ner_task[c]) >= 0) {
-                                        contain = true;
-                                        break L;
-                                    }
-                                }
-                            }
-                            if (contain) {
-                                retain.push(spo[b]);
-                            }
-                        }
-                        console.log("spo=" + JSON.stringify(retain));  //////////////////
-                        fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
-                        // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
-                            if (err3) {
-                                callback("写mnd文件报错");
-                            } else {
-                                callback(null);
-                            }
-                        });
+                        callback(null);
                     }
                 });
             } else {
@@ -932,8 +815,7 @@ app.post("/test-text", function (req, response) {
                 },
                 summary_task: ['text_task', summary_task],
                 title_task: ['text_task', title_task],
-                ner_task: ['text_task', ner_task],
-                spo_task: ['summary_task', 'title_task', 'ner_task', spo_task]
+                spo_task: ['summary_task', 'title_task', spo_task]
             }, function(err) {
                 if (err) {
                     console.error(err);
