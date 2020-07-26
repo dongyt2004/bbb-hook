@@ -774,9 +774,10 @@ var ner_task = function(callback, results) {
 var spo_task = function(callback, results) {
     request.post({
         url: "http://triple-svc.nlp:50000",  //"http://triple.ruoben.com:8008",
-        form: {
-            s: results.text_task
+        headers: {
+            "Content-Type": "text/plain"
         },
+        body: results.text_task,
         timeout: 600000
     }, function (err, res, body) {
         if (err) {
@@ -784,7 +785,7 @@ var spo_task = function(callback, results) {
         } else {
             if (res.statusCode === 200) {
                 console.log("spo=" + JSON.stringify(body));  //////////////////
-                fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
+                fs.writeFile("/var/bigbluebutton/published/presentation/test/webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': body}), function (err3) {
                 // fs.writeFile("C:\\Users\\dongyt\\Desktop\\test\\webcams.mnd", JSON.stringify({'speaker': '测试用户', 'sum_obj': results.summary_task, 'title': results.title_task, 'spo': retain}), function (err3) {
                     if (err3) {
                         callback("写mnd文件报错");
